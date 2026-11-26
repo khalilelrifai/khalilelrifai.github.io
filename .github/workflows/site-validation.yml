@@ -1,0 +1,60 @@
+name: Build and validate site
+on:
+  push:
+    branches: [feat/local-seo-gbp-ai-search-optimization]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python _src/build.py
+      - run: python _src/validate.py
+      - run: node --check js/site.js && node --check js/google-reviews.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generated-site
+          path: |
+            *.html
+            services/
+            sitemap.xml
+            robots.txt
+            llms.txt
+            css/
+            js/
+            img/
+      - name: Require generated files to match source on pull requests
+        if: github.event_name == 'pull_request'
+        run: git diff --exit-code -- '*.html' sitemap.xml robots.txt llms.txt
+  regenerate-feature-branch:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feat/local-seo-gbp-ai-search-optimization'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          python _src/build.py
+          python _src/validate.py
+          git add -- '*.html' sitemap.xml robots.txt llms.txt
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Regenerate validated static website'
+            git push origin HEAD:refs/heads/feat/local-seo-gbp-ai-search-optimization
+          fi
