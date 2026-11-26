@@ -8,18 +8,19 @@ permissions:
   contents: read
 jobs:
   browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: npm install --no-save --package-lock=false playwright@1.56.1
-      - run: npx playwright install --with-deps chromium
       - run: |
           mkdir -p browser-evidence
           python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/abr-server.log 2>&1 &
           for attempt in {1..10}; do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep 1; done
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium)"
+          test -x "$CHROME_PATH"
           node _src/browser-test.cjs
       - uses: actions/upload-artifact@v4
         if: always()
@@ -27,7 +28,7 @@ jobs:
           name: browser-evidence
           path: browser-evidence/
   lighthouse:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4

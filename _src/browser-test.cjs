@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const base = "http://127.0.0.1:8000";
 (async () => {
- const browser = await chromium.launch({headless:true});
+ const browser = await chromium.launch({headless:true, executablePath:process.env.CHROME_PATH || undefined,args:['--no-sandbox']});
  try {
   const page = await browser.newPage({viewport:{width:375,height:812}});
   const errors=[];
