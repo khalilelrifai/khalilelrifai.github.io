@@ -1,0 +1,37 @@
+{
+  "_README": "Edit this file, then run: python3 _src/build.py  (regenerates every page). Fields marked TODO need confirming against the Google Business Profile.",
+
+  "name": "ABR Pro Towing",
+  "domain": "https://abrprotowing.com",
+  "phone_display": "(647) 892-5167",
+  "phone_e164": "+16478925167",
+  "phone_schema": "+1-647-892-5167",
+  "email": "Abrprotowing@gmail.com",
+  "city": "Mississauga",
+  "region": "ON",
+  "region_full": "Ontario",
+  "country": "CA",
+  "geo": { "lat": 43.589, "lng": -79.6441 },
+
+  "_service_areas_TODO": "Must match the service areas listed on the Google Business Profile.",
+  "service_areas": ["Mississauga", "Brampton", "Oakville", "Etobicoke", "Milton", "Toronto"],
+
+  "_gbp_TODO": "Paste the Google Business Profile share link and the 'Ask for reviews' link.",
+  "gbp_url": "",
+  "gbp_review_url": "",
+
+  "social": { "facebook": "", "instagram": "", "tiktok": "" },
+
+  "whatsapp": false,
+  "licensed_insured": false,
+  "founded_year": "",
+
+  "_reviews_format": "{\"author\": \"First name or initial\", \"rating\": 5, \"date\": \"2026-10\", \"text\": \"Exact review text from Google\"}",
+  "reviews": [],
+
+  "_posts_format": "{\"title\": \"...\", \"date\": \"2026-11-01\", \"text\": \"...\", \"image\": \"/img/photos/file.webp\"}",
+  "posts": [],
+
+  "_gallery_format": "{\"src\": \"/img/photos/file.webp\", \"alt\": \"Flatbed tow truck loading a car in Mississauga\", \"w\": 1200, \"h\": 900}",
+  "gallery": []
+}
