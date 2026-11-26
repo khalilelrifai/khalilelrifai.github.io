@@ -1,0 +1,11 @@
+# Mississauga-first local SEO
+Homepage: commercial towing intent; Mississauga page: local coverage, neighbourhoods, practical safety and service selection; service pages: emergency towing, roadside assistance, accident recovery, vehicle transport. Secondary cities only as existing service areas pending owner verification; no new branches or doorway pages. Target towing Mississauga, tow truck Mississauga, roadside assistance Mississauga, battery boost, flat tire, lockout and vehicle transport. Validate search demand via Search Console/Keyword Planner before expansion. Do not claim restricted-highway service or unsupported capabilities.
+Confirm competitors from actual local searches at several Mississauga locations; record rank, distance, category, review count, listing completeness and content gaps; no fabricated competitor results. Build real local citations in Bing Places, Apple Business Connect, Yelp, Yellow Pages Canada and Facebook Business where appropriate. Maintain exact name/phone/site and service areas. Ask every eligible customer for an honest review without incentives or review gating.
+
+## Public competitor observations (2026-11-26)
+These are website search-intent comparisons, not measured local-pack rank or review count.
+- ASAP Roadside Assistance: Mississauga-specific towing page, roadside services, clear Ontario towing rights/restricted-zone exception. https://asaproadside.ca/towing-service-mississauga/ and https://asaproadside.ca/towing-service/
+- Norman Towing: dedicated Mississauga landing page and individual service intent including unlock and corporate towing. https://www.normantowing.ca/service-area/mississauga
+- Atlantic Towing: established Mississauga business narrative, towing/storage and roadside service categories. https://atlantictow.com/
+- Cheap Towing: Mississauga-focused branding and price-oriented commercial intent. https://www.mississaugatowing.com/
+ABR differentiation: transparent quote and service limitations, direct call/text, true Mississauga base, authentic fleet photos and real reviews. Do not copy competitor content or claim price/response advantages without evidence. Prioritize local towing and service-specific queries over the entire GTA. Google local ranking guidance: https://support.google.com/business/answer/7091/ .

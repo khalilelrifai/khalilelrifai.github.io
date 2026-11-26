@@ -1,7 +1,6 @@
 {
   "_README": "Edit this file, then run: python3 _src/build.py  (regenerates every page). Fields marked TODO need confirming against the Google Business Profile.",
-
-  "name": "ABR Pro Towing",
+  "name": "ABR Pro Towing & Recovery",
   "domain": "https://abrprotowing.com",
   "phone_display": "(647) 892-5167",
   "phone_e164": "+16478925167",
@@ -11,27 +10,35 @@
   "region": "ON",
   "region_full": "Ontario",
   "country": "CA",
-  "geo": { "lat": 43.589, "lng": -79.6441 },
-
   "_service_areas_TODO": "Must match the service areas listed on the Google Business Profile.",
-  "service_areas": ["Mississauga", "Brampton", "Oakville", "Etobicoke", "Milton", "Toronto"],
-
-  "_gbp_TODO": "Paste the Google Business Profile share link and the 'Ask for reviews' link.",
+  "service_areas": [
+    "Mississauga",
+    "Brampton",
+    "Oakville",
+    "Etobicoke",
+    "Milton",
+    "Toronto"
+  ],
+  "_gbp_TODO": "Confirm official GBP URL, review link, exact public name, hours and service areas. Owner-provided share link is a fallback, not verified schema identity.",
   "gbp_url": "",
   "gbp_review_url": "",
-
-  "social": { "facebook": "", "instagram": "", "tiktok": "" },
-
+  "social": {
+    "facebook": "",
+    "instagram": "",
+    "tiktok": ""
+  },
   "whatsapp": false,
   "licensed_insured": false,
   "founded_year": "",
-
-  "_reviews_format": "{\"author\": \"First name or initial\", \"rating\": 5, \"date\": \"2026-10\", \"text\": \"Exact review text from Google\"}",
-  "reviews": [],
-
   "_posts_format": "{\"title\": \"...\", \"date\": \"2026-11-01\", \"text\": \"...\", \"image\": \"/img/photos/file.webp\"}",
   "posts": [],
-
   "_gallery_format": "{\"src\": \"/img/photos/file.webp\", \"alt\": \"Flatbed tow truck loading a car in Mississauga\", \"w\": 1200, \"h\": 900}",
-  "gallery": []
+  "gallery": [],
+  "gbp_owner_share_url": "https://share.google/GNsj14FYJZ46z7Qpz",
+  "google_reviews": {
+    "enabled": false,
+    "place_id": "",
+    "browser_key": ""
+  },
+  "content_updated": "2026-11-26"
 }

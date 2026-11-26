@@ -13,7 +13,7 @@ import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 S = json.load(open(os.path.join(ROOT, "_src", "site.json"), encoding="utf-8"))
-TODAY = datetime.date.today().isoformat()
+TODAY = S.get("content_updated", "2026-11-26")
 
 NAME = S["name"]
 DOMAIN = S["domain"].rstrip("/")
@@ -26,10 +26,11 @@ AREAS = S["service_areas"]
 OTHER_AREAS = [a for a in AREAS if a != CITY]
 WA = "https://wa.me/" + S["phone_e164"].lstrip("+")
 GBP = S.get("gbp_url", "")
+GBP_SHARE = S.get("gbp_owner_share_url", "")
 GBP_REVIEW = S.get("gbp_review_url", "")
-HAS_OG = os.path.exists(os.path.join(ROOT, "img", "og-image.jpg"))
-HAS_TOUCH = os.path.exists(os.path.join(ROOT, "img", "apple-touch-icon.png"))
-LOGO_URL = DOMAIN + ("/img/logo-512.png" if os.path.exists(os.path.join(ROOT, "img", "logo-512.png")) else "/favicon.svg")
+HAS_OG = False  # legacy preview retired
+HAS_TOUCH = False  # legacy icon retired
+LOGO_URL = DOMAIN + "/img/abr-pro-logo.webp"
 OG_URL = DOMAIN + "/img/og-image.jpg"
 
 e = html.escape
@@ -64,11 +65,7 @@ def icon(name, cls="icon"):
     return f'<svg class="{cls}" viewBox="0 0 24 24" aria-hidden="true">{p}</svg>'
 
 
-LOGO_SVG = (
-    '<svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="11" fill="#ffc21a"/>'
-    '<path d="M15 9v15a7 7 0 1 0 14 0" fill="none" stroke="#15171a" stroke-width="5" stroke-linecap="round"/>'
-    '<circle cx="15" cy="9" r="3.5" fill="#15171a"/><path d="M29 24l5-4v9z" fill="#15171a"/></svg>'
-)
+LOGO_SVG = '<img class="brand-logo" src="/img/abr-pro-logo.webp" width="56" height="56" alt="">'
 
 GOOGLE_G = (
     '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>'
@@ -108,9 +105,9 @@ SERVICES = [
     {
         "slug": "emergency-towing",
         "name": "24/7 Emergency Towing",
-        "short": "Breakdowns, cars that won't start, highway stops — we tow you to your home, mechanic, dealer or body shop.",
+        "short": "Breakdowns, cars that won't start, local roadside stops — we tow you to your home, mechanic, dealer or body shop.",
         "icon": "truck",
-        "bullets": ["Cars, SUVs, minivans and light trucks", "Highway, roadside, driveway and parking-lot pickups", "Delivered to the shop or address you choose"],
+        "bullets": ["Cars, SUVs, minivans and light trucks", "Local roadside, driveway and parking-lot pickups", "Delivered to the shop or address you choose"],
     },
     {
         "slug": "roadside-assistance",
@@ -141,16 +138,15 @@ MISSISSAUGA_HOODS = [
     "Applewood", "Rathwood", "Hurontario", "Mississauga Valleys", "Heartland", "East Credit", "Sheridan", "Fairview",
 ]
 MISSISSAUGA_ROADS = [
-    "Highway 401", "Highway 403", "Highway 410", "Highway 407 ETR", "QEW", "Highway 427 (Etobicoke border)",
     "Hurontario Street", "Dundas Street", "Eglinton Avenue", "Mavis Road", "Erin Mills Parkway",
     "Winston Churchill Boulevard", "Lakeshore Road", "Airport Road (Pearson area)",
 ]
 
 AREA_BLURBS = {
-    "Brampton": "Right next door along Highway 410 and Hurontario. We cover breakdowns and transports from Bramalea to Mount Pleasant and the industrial areas off Steeles.",
-    "Oakville": "Along the QEW, Highway 403 and Dundas Street — from Bronte to Glen Abbey and the Oakville GO area.",
-    "Etobicoke": "Across the 427 border — Highway 401, 427 and the Gardiner corridor, plus the Pearson cargo and hotel strip.",
-    "Milton": "Up the 401 to Milton for breakdowns, dealer pickups and long-distance vehicle moves.",
+    "Brampton": "Local breakdown assistance and vehicle transport in Brampton, including Bramalea and Mount Pleasant, subject to availability.",
+    "Oakville": "Local service in Oakville, from Bronte to Glen Abbey, subject to availability.",
+    "Etobicoke": "Local service in Etobicoke, including commercial areas and hotels, subject to availability.",
+    "Milton": "Local service in Milton for breakdowns, dealer pickups and long-distance vehicle moves.",
     "Toronto": "We travel into Toronto for tows to and from Mississauga, dealer transfers and planned vehicle transport.",
 }
 
@@ -205,14 +201,13 @@ def tow_form(heading="Request a tow", intro="For non-urgent bookings and quotes.
     <input type="hidden" name="_subject" value="New tow request — {e(NAME)} website">
     <input type="hidden" name="_next" value="{DOMAIN}/thank-you.html">
     <input type="hidden" name="_template" value="table">
-    <input type="hidden" name="_captcha" value="false">
     <input type="text" name="_honey" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
     <div class="form-grid">
       <div><label for="f-name">Your name</label><input id="f-name" name="name" autocomplete="name" required></div>
       <div><label for="f-phone">Phone number</label><input id="f-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required></div>
       <div class="full"><label for="f-email">Email <span class="muted">(optional)</span></label><input id="f-email" name="email" type="email" autocomplete="email"></div>
       <div><label for="f-service">Service</label><select id="f-service" name="service">{opts}<option>Other / not sure</option></select></div>
-      <div><label for="f-where">Pickup location</label><input id="f-where" name="pickup_location" placeholder="Address, intersection or highway"></div>
+      <div><label for="f-where">Pickup location</label><input id="f-where" name="pickup_location" placeholder="Local street address or intersection"></div>
       <div class="full"><label for="f-to">Drop-off (if towing)</label><input id="f-to" name="dropoff_location" placeholder="Home, mechanic, dealer, body shop…"></div>
       <div class="full"><label for="f-msg">Vehicle &amp; details</label><textarea id="f-msg" name="message" placeholder="Year, make, model — and what happened"></textarea></div>
       <div class="full"><button class="btn btn-call btn-lg" type="submit" style="width:100%">Send request</button>
@@ -250,24 +245,19 @@ def fmt_date(d):
 
 
 def review_cards(limit=None, all_layout=False):
-    revs = S.get("reviews", [])
-    if limit:
-        revs = revs[:limit]
-    cards = "".join(
-        f"""<figure class="review">{stars(r.get('rating', 5))}<blockquote>“{e(r['text'])}”</blockquote>
-<footer>{e(r['author'])}<span>{fmt_date(r.get('date', ''))} · Google</span></footer></figure>"""
-        for r in revs
-    )
-    return f'<div class="reviews{" all" if all_layout else ""}">{cards}</div>' if cards else ""
+    return ""  # Do not store Google review content.
 
 
 def google_buttons():
     out = []
-    if GBP:
-        out.append(f'<a class="btn btn-outline" href="{e(GBP)}" target="_blank" rel="noopener">{GOOGLE_G.replace("<svg", "<svg class=\"icon\"", 1)}<span>See all reviews on Google</span></a>')
+    if GBP or GBP_SHARE:
+        out.append(f'<a class="btn btn-outline" href="{e(GBP or GBP_SHARE)}" target="_blank" rel="noopener">View our Google profile</a>')
     if GBP_REVIEW:
         out.append(f'<a class="btn btn-dark" href="{e(GBP_REVIEW)}" target="_blank" rel="noopener">{icon("star")}<span>Leave us a review</span></a>')
-    return f'<div class="btn-row" style="justify-content:center;margin-top:1.5rem">{"".join(out)}</div>' if out else ""
+    review = S.get("google_reviews", {})
+    key, pid = review.get("browser_key", ""), review.get("place_id", "")
+    panel = (f'<div class="live-reviews" data-key="{e(key)}" data-place="{e(pid)}"><button class="btn btn-outline" type="button">Load Google reviews</button><p role="status" aria-live="polite"></p><div class="google-results"></div></div>' if key and pid and review.get("enabled") else "")
+    return panel + (f'<div class="btn-row" style="justify-content:center;margin-top:1.5rem">{"".join(out)}</div>' if out else "")
 
 
 def reviews_section(soft=True):
@@ -314,7 +304,7 @@ def posts_section():
     return f"""
 <section class="section soft" id="updates">
   <div class="wrap">
-    <div class="section-head center"><span class="kicker">Latest updates</span><h2>News from ABR Pro Towing</h2></div>
+    <div class="section-head center"><span class="kicker">Latest updates</span><h2>News from ABR Pro Towing & Recovery</h2></div>
     <div class="grid grid-3">{cards}</div>
   </div>
 </section>"""
@@ -381,7 +371,7 @@ def page_hero(trail, h1, lead, buttons=True):
 def business_entity():
     same = [u for u in [GBP] + list(S.get("social", {}).values()) if u]
     ent = {
-        "@type": ["AutomotiveBusiness", "EmergencyService"],
+        "@type": "AutomotiveBusiness",
         "@id": DOMAIN + "/#business",
         "name": NAME,
         "url": DOMAIN + "/",
@@ -390,9 +380,7 @@ def business_entity():
         "description": f"24/7 towing and roadside assistance in {CITY}, Ontario: emergency towing, battery boosts, lockouts, flat tires, accident recovery and vehicle transport.",
         "logo": LOGO_URL,
         "image": OG_URL if HAS_OG else LOGO_URL,
-        "priceRange": "$$",
         "address": {"@type": "PostalAddress", "addressLocality": CITY, "addressRegion": S["region"], "addressCountry": S["country"]},
-        "geo": {"@type": "GeoCoordinates", "latitude": S["geo"]["lat"], "longitude": S["geo"]["lng"]},
         "areaServed": [{"@type": "City", "name": f"{a}, {S['region']}"} for a in AREAS],
         "openingHoursSpecification": [{
             "@type": "OpeningHoursSpecification",
@@ -442,8 +430,8 @@ def layout(path, title, desc, body, schema=None, noindex=False, active=None):
         f'<a href="{e(u)}" target="_blank" rel="noopener" aria-label="{k.title()}">{icon(k)}</a>'
         for k, u in S.get("social", {}).items() if u
     )
-    if GBP:
-        social_links += f'<a href="{e(GBP)}" target="_blank" rel="noopener" aria-label="Google Business Profile">{GOOGLE_G}</a>'
+    if GBP or GBP_SHARE:
+        social_links += f'<a href="{e(GBP or GBP_SHARE)}" target="_blank" rel="noopener" aria-label="Google Business Profile">{GOOGLE_G}</a>'
     socials = f'<div class="socials">{social_links}</div>' if social_links else ""
     svc_links = "".join(f'<li><a href="/services/{s["slug"]}.html">{s["name"]}</a></li>' for s in SERVICES)
     area_links = "".join(
@@ -454,14 +442,14 @@ def layout(path, title, desc, body, schema=None, noindex=False, active=None):
     robots = "noindex, follow" if noindex else "index, follow, max-image-preview:large"
     og_img = f'<meta property="og:image" content="{OG_URL}">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n' if HAS_OG else ""
     touch = '<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">\n' if HAS_TOUCH else ""
-    year = datetime.date.today().year
+    year = int(TODAY[:4])
 
     return f"""<!doctype html>
 <html lang="en-CA">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{title}</title>
+<title>{e(title)}</title>
 <meta name="description" content="{e(desc)}">
 <link rel="canonical" href="{url}">
 <meta name="robots" content="{robots}">
@@ -474,8 +462,9 @@ def layout(path, title, desc, body, schema=None, noindex=False, active=None):
 <meta property="og:title" content="{e(title)}">
 <meta property="og:description" content="{e(desc)}">
 <meta property="og:url" content="{url}">
-{og_img}<meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:image" content="{LOGO_URL}">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/img/abr-pro-logo.webp" type="image/webp">
 {touch}<link rel="stylesheet" href="/css/site.css?v={TODAY.replace('-', '')}">
 <script type="application/ld+json">
 {ld}
@@ -486,7 +475,7 @@ def layout(path, title, desc, body, schema=None, noindex=False, active=None):
 <div class="topline"><div class="wrap"><span>Open 24/7 · Towing<span class="hide-s"> &amp; roadside help</span> in {CITY}</span><a class="hide-s" href="{TEL}">Call {PHONE}</a></div></div>
 <header class="site-header">
   <div class="wrap header-inner">
-    <a class="brand" href="/" aria-label="{e(NAME)} — home">{LOGO_SVG}<span>ABR <b>Pro Towing</b></span></a>
+    <a class="brand" href="/" aria-label="{e(NAME)} — home">{LOGO_SVG}<span>ABR <b>Pro Towing</b><small>&amp; Recovery</small></span></a>
     <nav class="nav" id="nav" aria-label="Main">{nav}</nav>
     <a class="btn btn-call header-call" href="{TEL}">{icon("phone")}<span class="num">{PHONE}</span><span class="sr-only">Call us</span></a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav" aria-label="Open menu">{icon("menu")}</button>
@@ -494,13 +483,14 @@ def layout(path, title, desc, body, schema=None, noindex=False, active=None):
 </header>
 <main id="main">
 {body}
+<div class="wrap"><p class="coverage-notice">Services are available within our authorized operating areas. Restricted towing zones are excluded. <a href="https://www.ontario.ca/page/tow-zone-program">Ontario Tow Zone Program</a>.</p></div>
 </main>
 <footer class="site-footer">
   <div class="wrap">
     <div class="footer-grid">
       <div>
-        <a class="brand" href="/">{LOGO_SVG}<span>ABR <b>Pro Towing</b></span></a>
-        <p style="margin-top:1rem">24/7 towing and roadside assistance based in {CITY}, {S['region_full']}.</p>
+        <a class="brand" href="/">{LOGO_SVG}<span>ABR <b>Pro Towing</b><small>&amp; Recovery</small></span></a>
+        <p style="margin-top:1rem">24/7 towing and roadside assistance based in {CITY}, {S['region_full']}, serving surrounding GTA communities.</p>
         <a class="footer-phone" href="{TEL}">{PHONE}</a>
         <ul>
           <li><a href="mailto:{EMAIL}">{EMAIL}</a></li>
@@ -529,6 +519,7 @@ def layout(path, title, desc, body, schema=None, noindex=False, active=None):
   <a class="cb-text" href="{SMS}">{icon("sms")}Text</a>{wa_bar}
 </div>
 <script src="/js/site.js" defer></script>
+<script src="/js/google-reviews.js" defer></script>
 </body>
 </html>
 """
@@ -545,7 +536,7 @@ def add(path, filename, html_out, sitemap=True, priority="0.7"):
 # ---------- Home
 HOME_FAQ = [
     ("How fast can a tow truck get to me in Mississauga?",
-     "We dispatch as soon as you call and give you an honest arrival time on the phone based on where you are, traffic and the time of day. If you're in a dangerous spot, tell us — we prioritize highway and shoulder calls."),
+     "We dispatch as soon as you call and give you an honest arrival time on the phone based on where you are, traffic and the time of day. Restricted towing zones are excluded. Call 911 if there is immediate danger."),
     ("How much does a tow cost in Mississauga?",
      "The price depends on the distance, your vehicle and the situation (for example a simple breakdown versus an accident or a car stuck in a ditch). Call or text us with your location and destination and we'll quote you <strong>before</strong> we send a truck — no surprises."),
     ("Are you really open 24 hours?",
@@ -555,7 +546,7 @@ HOME_FAQ = [
     ("Do you help if I just need a boost, a tire change or a lockout?",
      "Yes. Our <a href=\"/services/roadside-assistance.html\">roadside assistance</a> covers battery boosts, flat tire changes using your spare, and car lockouts — often no tow is needed."),
     ("Which areas do you cover?",
-     f"We're based in {CITY} and cover every Mississauga neighbourhood plus {', '.join(OTHER_AREAS[:-1])} and {OTHER_AREAS[-1]}. See our <a href=\"/service-areas.html\">service areas</a>." if len(OTHER_AREAS) > 1 else f"We cover all of {CITY}."),
+     f"We're based in {CITY} and cover Mississauga neighbourhoods plus {', '.join(OTHER_AREAS[:-1])} and {OTHER_AREAS[-1]}. See our <a href=\"/service-areas.html\">service areas</a>." if len(OTHER_AREAS) > 1 else f"We cover all of {CITY}."),
 ]
 
 home_body = f"""
@@ -564,7 +555,7 @@ home_body = f"""
     <div>
       <p class="eyebrow"><span class="dot" aria-hidden="true"></span>Open now · 24 hours, 7 days</p>
       <h1>24/7 Towing &amp; Roadside Assistance in <em>Mississauga</em></h1>
-      <p class="lead">Broken down on the 401, the 403 or in a parking lot at Square One? {NAME} sends a tow truck to you — day or night. One call gets you a clear price and an honest arrival time.</p>
+      <p class="lead">Need a tow on a local street or in a parking lot near Square One? {NAME} sends a tow truck to you — day or night. One call gets you a clear price and an honest arrival time.</p>
       <div class="btn-row">{call_btn("btn btn-call btn-lg")}{text_btn("btn btn-ghost btn-lg", "Text your location")}</div>
       <ul class="ticks">
         <li>{icon("clock")}Open 24/7, including holidays</li>
@@ -580,7 +571,7 @@ home_body = f"""
 <section class="section" id="services">
   <div class="wrap">
     <div class="section-head"><span class="kicker">Our services</span><h2>Towing and roadside help for every situation</h2>
-    <p class="muted">From a dead battery in your driveway to a collision on the highway — one number, any time.</p></div>
+    <p class="muted">From a dead battery in your driveway to a breakdown on a local street — one number, any time.</p></div>
     {service_cards()}
   </div>
 </section>
@@ -604,18 +595,18 @@ home_body = f"""
     <div>
       <span class="kicker">Why {CITY} drivers call us</span>
       <h2>A local tow company that picks up the phone</h2>
-      <p>We're based in {CITY}, so we know the roads — the 401/403/410 interchange, the QEW, Hurontario, Dundas, Eglinton and the busy plazas and condo garages around City Centre. That local knowledge means faster pickups and fewer surprises.</p>
+      <p>We're based in {CITY}, so we know the roads — Hurontario, Dundas, Eglinton and the busy plazas and condo garages around City Centre. Call to confirm access and availability.</p>
       <div class="grid grid-2" style="margin-top:1.5rem">
         <div class="feature"><span class="card-icon">{icon("clock")}</span><div><h3>Always open</h3><p class="muted">Nights, weekends, holidays and bad-weather days.</p></div></div>
         <div class="feature"><span class="card-icon">{icon("dollar")}</span><div><h3>Upfront pricing</h3><p class="muted">You know the price before we roll.</p></div></div>
         <div class="feature"><span class="card-icon">{icon("hand")}</span><div><h3>Careful handling</h3><p class="muted">Properly secured and delivered where you choose.</p></div></div>
-        <div class="feature"><span class="card-icon">{icon("pin")}</span><div><h3>Truly local</h3><p class="muted">All of {CITY} plus {", ".join(OTHER_AREAS[:3])} and more.</p></div></div>
+        <div class="feature"><span class="card-icon">{icon("pin")}</span><div><h3>Truly local</h3><p class="muted">{CITY} and nearby communities including {", ".join(OTHER_AREAS[:3])} and more.</p></div></div>
       </div>
       <p style="margin-top:1.5rem"><a class="btn btn-outline" href="/towing-mississauga.html">Towing in {CITY} {icon("arrow")}</a></p>
     </div>
     <div class="card">
       <h3>Areas we serve</h3>
-      <p class="muted">Every {CITY} neighbourhood, including:</p>
+      <p class="muted">{CITY} neighbourhoods, including:</p>
       <ul class="chips" style="margin-bottom:1.2rem">{"".join(f"<li>{h}</li>" for h in MISSISSAUGA_HOODS[:12])}</ul>
       <p class="muted">And nearby cities:</p>
       {area_chips()}
@@ -654,8 +645,8 @@ add("/", "index.html", layout(
 
 # ---------- Mississauga page
 MISS_FAQ = [
-    ("Do you tow on Highway 401, 403, 410 and the QEW?",
-     "Yes. We handle breakdowns and collisions on every 400-series highway through Mississauga, including the 401, 403, 410, 407 ETR, the QEW and the 427 near the Etobicoke border. If you're on the shoulder, stay buckled in with your hazard lights on until we arrive, unless it's safer to leave the vehicle."),
+    ("Do you provide towing in restricted zones?",
+     "No. Restricted towing zones are excluded. If you are safe and need assistance in a restricted zone, call Ontario 511 and select the Tow Zone Program. Call 911 in an emergency."),
     ("Can you get a car out of an underground condo or plaza garage?",
      "Often yes. Tell us the garage name or address and, if you know it, the clearance height. We'll tell you on the phone what equipment we'll bring."),
     ("Do you tow near Pearson Airport and Malton?",
@@ -670,13 +661,13 @@ roads = "".join(f"<li>{r}</li>" for r in MISSISSAUGA_ROADS)
 trail = [("Home", "/"), ("Towing Mississauga", "/towing-mississauga.html")]
 miss_body = page_hero(
     trail, "Towing in Mississauga, ON — 24 Hours a Day",
-    f"{NAME} is a local Mississauga towing company. We tow cars, SUVs, minivans and light trucks anywhere in the city — and help with boosts, lockouts and flat tires — any time, day or night."
+    f"{NAME} is a local Mississauga towing company. We tow cars, SUVs, minivans and light trucks in authorized locations in the city — and help with boosts, lockouts and flat tires — any time, day or night."
 ) + f"""
 <section class="section">
   <div class="wrap split">
     <div class="prose">
-      <h2>Fast, local towing anywhere in Mississauga</h2>
-      <p>When your car won't start in a Square One parking lot, gets a flat on Mavis Road, or is involved in a fender-bender on Hurontario, you want a tow truck that's close by and a company that answers the phone. That's us. We're based right here in {CITY} and work every neighbourhood from Port Credit on the lake to Meadowvale and Malton in the north.</p>
+      <h2>Local towing across Mississauga</h2>
+      <p>When your car won't start in a Square One parking lot, gets a flat on Mavis Road, or is involved in a fender-bender on Hurontario, you want a tow truck that's close by and a company that answers the phone. That's us. We're based right here in {CITY} and serve local neighbourhoods from Port Credit on the lake to Meadowvale and Malton in the north.</p>
       <p>Call <a href="{TEL}"><strong>{PHONE}</strong></a>, tell us where you are and where the vehicle needs to go, and we'll give you a price and an honest arrival time before we dispatch.</p>
 
       <h2>Towing services we provide in Mississauga</h2>
@@ -690,15 +681,15 @@ miss_body = page_hero(
       <h2>Mississauga neighbourhoods we cover</h2>
       <ul class="chips">{hoods}</ul>
 
-      <h2>Highways and main roads</h2>
-      <p>Many of our calls come from the busiest roads in Peel Region. We know the on-ramps, shoulders and safe pull-offs:</p>
+      <h2>Local streets and main roads</h2>
+      <p>Examples of local roads we serve, subject to safe access and availability:</p>
       <ul class="chips">{roads}</ul>
 
       <h2>Stuck on the side of the road? Do this while you wait</h2>
       <ol>
-        <li><strong>Get safe first.</strong> Turn on your hazard lights. On a highway, pull as far onto the shoulder as you can. If it's safe to leave the car, wait behind the guardrail — otherwise stay buckled in.</li>
+        <li><strong>Get safe first.</strong> If possible, move to a safe location and turn on your hazard lights. Call 911 if there is immediate danger.</li>
         <li><strong>If anyone is hurt, call 911.</strong> Then call us.</li>
-        <li><strong>Note your location.</strong> The nearest exit, intersection or a landmark helps — or text us a map pin from your phone.</li>
+        <li><strong>Note your location.</strong> The nearest local intersection or a landmark helps — or text us a map pin from your phone.</li>
         <li><strong>Know your rights.</strong> In Ontario you choose where your vehicle goes. Always confirm the price before a tow, and ask for an itemized invoice.</li>
       </ol>
       <div class="callout"><p><strong>Minor collision, no injuries?</strong> Peel Regional Police may ask you to report it at a Collision Reporting Centre. We can tow your vehicle there, and then on to the body shop of your choice.</p></div>
@@ -707,7 +698,7 @@ miss_body = page_hero(
       {faq_block(MISS_FAQ)}
     </div>
     <aside class="aside-stack">
-      <div class="card"><h3>Need a tow in Mississauga?</h3><p class="muted">Open 24/7. Call or text and we'll be on our way.</p>
+      <div class="card"><h3>Need a tow in Mississauga?</h3><p class="muted">Open 24/7. Call or text to confirm availability.</p>
         <div class="btn-row">{call_btn("btn btn-call")}{text_btn("btn btn-outline", "Text us")}</div></div>
       <div class="card"><h3>Also serving</h3>{area_chips()}</div>
     </aside>
@@ -716,8 +707,8 @@ miss_body = page_hero(
 {reviews_section()}
 <section class="section">
   <div class="wrap">
-    <div class="section-head"><h2>Mississauga service area</h2><p class="muted">We're a mobile, service-area business — we come to you anywhere in {CITY}.</p></div>
-    <iframe class="map" title="Map of Mississauga, Ontario service area" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+    <div class="section-head"><h2>Mississauga service area</h2><p class="muted">We're a mobile, service-area business — we come to you within authorized areas in {CITY}.</p></div>
+    <iframe class="map" title="General map of Mississauga, not a business address" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
       src="https://maps.google.com/maps?q=Mississauga%2C%20ON%2C%20Canada&amp;z=11&amp;output=embed"></iframe>
   </div>
 </section>
@@ -725,7 +716,7 @@ miss_body = page_hero(
 """
 add("/towing-mississauga.html", "towing-mississauga.html", layout(
     "/towing-mississauga.html", f"Towing Mississauga 24/7 | Tow Truck Near You | {NAME}",
-    f"Local 24/7 tow truck in Mississauga, ON. Highway 401, 403, 410 & QEW towing, boosts, lockouts, accident recovery. Port Credit to Malton. Call {PHONE}.",
+    f"Local 24/7 tow truck in Mississauga, ON. Local towing, boosts, lockouts and accident recovery. Port Credit to Malton. Call {PHONE}.",
     miss_body, schema=[breadcrumb_schema(trail), faq_schema(MISS_FAQ)], active="/towing-mississauga.html"), priority="0.9")
 
 
@@ -733,7 +724,7 @@ add("/towing-mississauga.html", "towing-mississauga.html", layout(
 SERVICE_PAGES = {
     "emergency-towing": {
         "title": f"24/7 Emergency Towing Mississauga | {NAME}",
-        "desc": f"Emergency tow truck in Mississauga, open 24/7. Breakdowns, no-starts and highway towing to your home, mechanic or dealer. Price upfront. Call {PHONE}.",
+        "desc": f"Emergency tow truck in Mississauga, open 24/7. Breakdowns, no-starts and local towing to your home, mechanic or dealer. Price upfront. Call {PHONE}.",
         "h1": "24/7 Emergency Towing in Mississauga",
         "lead": "Car broke down, won't start, or isn't safe to drive? We'll tow it wherever you need — any hour of the day or night.",
         "body": f"""
@@ -743,13 +734,13 @@ SERVICE_PAGES = {
   <li>Engines that stall, overheat or won't start</li>
   <li>Transmission, brake or steering problems that make the car unsafe to drive</li>
   <li>Warning lights and strange noises you don't want to risk driving on</li>
-  <li>Vehicles stuck on a highway shoulder, in a ditch, or in a snowbank</li>
+  <li>Vehicles stuck in accessible local areas, in a ditch or in a snowbank</li>
   <li>Cars that need to get to a mechanic first thing in the morning</li>
 </ul>
 <h2>What's included</h2>
 <p>Every emergency tow includes a phone quote before we dispatch, an arrival estimate, proper securing of your vehicle, and delivery to the address you choose — your home, your mechanic, a dealership or a body shop. We tow cars, SUVs, minivans and light-duty trucks.</p>
-<h2>Highway and roadside towing</h2>
-<p>A lot of our emergency calls come from the 401, 403, 410, the QEW and the 407 ETR. If you're on a highway shoulder, put your hazard lights on, stay buckled in unless it's safer to get out and wait behind the barrier, and call us with the nearest exit or kilometre marker.</p>
+<h2>Local roadside towing</h2>
+<p>We assist with breakdowns on authorized local streets and accessible private property. Restricted towing zones are excluded. In a restricted zone, call Ontario 511 if safe, or 911 in an emergency.</p>
 <h2>Where we'll take your car</h2>
 <p>You decide. In Ontario you have the right to choose where your vehicle is towed (unless police direct otherwise). If you don't have a mechanic, we can suggest some nearby options — the choice is always yours.</p>
 """,
@@ -772,7 +763,7 @@ SERVICE_PAGES = {
 <h2>Car lockout service</h2>
 <p>Keys locked inside, or locked in the trunk? We'll help you get back in. For your protection we'll ask you to show proof that the vehicle is yours.</p>
 <h2>Where we provide roadside help</h2>
-<p>Anywhere in {CITY} — home driveways, condo and office parking, plazas, and highway shoulders — plus {", ".join(OTHER_AREAS)}.</p>
+<p>Authorized locations in {CITY} — home driveways, condo and office parking, plazas, and authorized local streets — plus {", ".join(OTHER_AREAS)}.</p>
 """,
         "faq": [
             ("Is roadside assistance cheaper than a tow?", "Usually yes. If a boost, tire change or lockout solves the problem, you avoid a tow entirely. Call and we'll quote both options."),
@@ -902,7 +893,7 @@ add("/services/", "services/index.html", layout(
 # ---------- Service areas
 trail = [("Home", "/"), ("Service Areas", "/service-areas.html")]
 blocks = f"""<article class="card" id="{CITY.lower()}"><span class="kicker">Home base</span><h3>{CITY}</h3>
-<p class="muted">Every neighbourhood from Port Credit to Malton, plus the 401, 403, 410, 407 and QEW.</p>
+<p class="muted">Local streets and accessible properties from Port Credit to Malton, subject to availability.</p>
 <a class="more" href="/towing-mississauga.html">Towing in {CITY} {icon('arrow')}</a></article>"""
 for a in OTHER_AREAS:
     blocks += f"""<article class="card" id="{a.lower()}"><h3>Towing in {e(a)}</h3><p class="muted">{AREA_BLURBS.get(a, f"Towing, roadside assistance and vehicle transport in {e(a)}.")}</p>
@@ -953,8 +944,8 @@ about_body = page_hero(trail, f"About {NAME}",
   <div class="wrap split">
     <div class="prose">
       <h2>Who we are</h2>
-      <p>{NAME} is a towing and roadside assistance company based in {CITY}, Ontario. We help drivers who are stuck — broken down on the highway, locked out at the mall, dealing with a dead battery on a cold morning, or shaken up after a collision — and we move vehicles for people and businesses across the GTA.</p>
-      <p>We keep it simple: answer the phone 24/7, give a clear price before we dispatch, show up when we say we will, and handle every vehicle carefully.</p>
+      <p>{NAME} is a towing and roadside assistance company based in {CITY}, Ontario. We help drivers who are stuck — broken down on a local street, locked out at the mall, dealing with a dead battery on a cold morning, or shaken up after a collision — and we move vehicles for people and businesses across the GTA.</p>
+      <p>We keep it simple: answer the phone 24/7, give a clear price before we dispatch, provide an arrival estimate, and handle every vehicle carefully.</p>
       <h2>What we stand for</h2>
       <ul>
         <li><strong>Honest pricing.</strong> You get the price before we send a truck — no surprises on the invoice.</li>
@@ -983,7 +974,7 @@ add("/about.html", "about.html", layout(
 
 # ---------- Contact
 trail = [("Home", "/"), ("Contact", "/contact.html")]
-contact_body = page_hero(trail, "Contact ABR Pro Towing",
+contact_body = page_hero(trail, "Contact ABR Pro Towing & Recovery",
                          f"Need a tow right now? Call — we answer 24/7. For quotes and planned transports, use the form.") + f"""
 <section class="section">
   <div class="wrap split">
@@ -998,7 +989,7 @@ contact_body = page_hero(trail, "Contact ABR Pro Towing",
 </section>
 <section class="section soft">
   <div class="wrap">
-    <div class="section-head"><h2>Where we work</h2><p class="muted">We're a mobile service — we come to you anywhere in {CITY} and nearby cities.</p></div>
+    <div class="section-head"><h2>Where we work</h2><p class="muted">We're a mobile service — we come to you within authorized areas in {CITY} and nearby cities.</p></div>
     <iframe class="map" title="Map of Mississauga, Ontario service area" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
       src="https://maps.google.com/maps?q=Mississauga%2C%20ON%2C%20Canada&amp;z=11&amp;output=embed"></iframe>
   </div>
@@ -1018,13 +1009,13 @@ ty_body = f"""
   <div class="btn-row" style="justify-content:center;margin-top:1.5rem">{call_btn("btn btn-call btn-lg")}<a class="btn btn-outline btn-lg" href="/">Back to home</a></div>
 </div></section>"""
 add("/thank-you.html", "thank-you.html", layout("/thank-you.html", f"Request received | {NAME}",
-    "Thanks for contacting ABR Pro Towing.", ty_body, noindex=True), sitemap=False)
+    "Thanks for contacting ABR Pro Towing & Recovery.", ty_body, noindex=True), sitemap=False)
 
 privacy_body = page_hero([("Home", "/"), ("Privacy", "/privacy.html")], "Privacy note", "How we handle the information you send us.", buttons=False) + f"""
 <section class="section"><div class="wrap narrow prose">
   <p>When you send our request form, we receive your name, phone number, optional email, locations and the details you type. We use this only to respond to your request, arrange your tow or service, and keep a record of the job.</p>
   <p>Form messages are delivered to our email through the FormSubmit service. We don't sell or share your information for marketing.</p>
-  <p>This website does not use advertising cookies. Embedded Google Maps may set their own cookies under Google's privacy policy.</p>
+  <p>Google Maps and optional Google review requests may transmit data to Google under its privacy policy and terms of service. We do not store Google review content.</p>
   <p>To ask about or delete your information, email <a href="mailto:{EMAIL}">{EMAIL}</a>.</p>
   <p class="muted">Last updated {fmt_date(TODAY)}.</p>
 </div></section>"""
@@ -1069,7 +1060,7 @@ for f, t in REDIRECTS.items():
     write(f, redirect_stub(t))
 
 urls = "".join(
-    f"  <url><loc>{DOMAIN}{path}</loc><lastmod>{TODAY}</lastmod><priority>{prio}</priority></url>\n"
+    f"  <url><loc>{DOMAIN}{path}</loc><lastmod>{TODAY}</lastmod></url>\n"
     for path, _, _, inc, prio in PAGES if inc
 )
 write("sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}</urlset>\n')
@@ -1091,13 +1082,13 @@ User-agent: ChatGPT-User
 Allow: /
 
 User-agent: GPTBot
-Allow: /
+Disallow: /
 
 User-agent: PerplexityBot
 Allow: /
 
 User-agent: ClaudeBot
-Allow: /
+Disallow: /
 
 User-agent: Applebot
 Allow: /
@@ -1108,13 +1099,13 @@ Sitemap: {DOMAIN}/sitemap.xml
 svc_lines = "\n".join(f"- [{s['name']}]({DOMAIN}/services/{s['slug']}.html): {html.unescape(s['short'])}" for s in SERVICES)
 write("llms.txt", f"""# {NAME}
 
-> {NAME} is a 24/7 towing and roadside assistance company based in {CITY}, {S['region_full']}, Canada. Phone: {PHONE}. Email: {EMAIL}. Open 24 hours, 7 days a week. Service area: {', '.join(AREAS)}.
+> {NAME} is a 24/7 towing and roadside assistance company based in {CITY}, {S['region_full']}, Canada. Phone: {PHONE}. Email: {EMAIL}. Open 24 hours, 7 days a week. Service area: {', '.join(AREAS)}. Services are available within our authorized operating areas. Restricted towing zones are excluded.
 
 ## Services
 {svc_lines}
 
 ## Key pages
-- [Towing in Mississauga]({DOMAIN}/towing-mississauga.html): neighbourhoods, highways, FAQs
+- [Towing in Mississauga]({DOMAIN}/towing-mississauga.html): neighbourhoods, local roads, FAQs
 - [Service areas]({DOMAIN}/service-areas.html)
 - [Reviews]({DOMAIN}/reviews.html)
 - [About]({DOMAIN}/about.html)

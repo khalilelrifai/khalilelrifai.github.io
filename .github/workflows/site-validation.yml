@@ -1,0 +1,38 @@
+name: Build and validate site
+on:
+  push:
+    branches: [feat/local-seo-gbp-ai-search-optimization]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python _src/build.py
+      - run: python _src/validate.py
+      - run: node --check js/site.js && node --check js/google-reviews.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generated-site
+          path: |
+            *.html
+            services/
+            sitemap.xml
+            robots.txt
+            llms.txt
+            css/
+            js/
+            img/
+      - name: Require generated files to match source
+        run: git diff --exit-code -- '*.html' sitemap.xml robots.txt llms.txt
