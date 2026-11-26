@@ -1,0 +1,54 @@
+name: Browser and performance checks
+on:
+  push:
+    branches: [feat/local-seo-gbp-ai-search-optimization]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: |
+          mkdir -p browser-evidence
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/abr-server.log 2>&1 &
+          for attempt in {1..10}; do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep 1; done
+          node _src/browser-test.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-evidence
+          path: browser-evidence/
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: baseline
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false lighthouse@12
+      - run: |
+          mkdir -p performance-evidence
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/abr-server.log 2>&1 &
+          python3 -m http.server 8001 --bind 127.0.0.1 --directory baseline > /tmp/abr-baseline.log 2>&1 &
+          for attempt in {1..10}; do curl -fsS http://127.0.0.1:8000/ >/dev/null && curl -fsS http://127.0.0.1:8001/ >/dev/null && break; sleep 1; done
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium)"
+          npx lighthouse http://127.0.0.1:8001/ --chrome-flags="--headless --no-sandbox" --only-categories=performance,accessibility,best-practices,seo --output=json --output-path=performance-evidence/main-mobile.json --quiet
+          npx lighthouse http://127.0.0.1:8000/ --chrome-flags="--headless --no-sandbox" --only-categories=performance,accessibility,best-practices,seo --output=json --output-path=performance-evidence/feature-mobile.json --quiet
+          node -e 'for(const f of ["main-mobile","feature-mobile"]){const r=require("./performance-evidence/"+f+".json");console.log(f,JSON.stringify({scores:Object.fromEntries(Object.entries(r.categories).map(([k,v])=>[k,Math.round(v.score*100)])),lcp:r.audits["largest-contentful-paint"].numericValue,cls:r.audits["cumulative-layout-shift"].numericValue,tbt:r.audits["total-blocking-time"].numericValue}));}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-evidence
+          path: performance-evidence/
