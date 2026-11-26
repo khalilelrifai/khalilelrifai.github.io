@@ -1,4 +1,4 @@
-# ABR Pro Towing & Recovery — all search engines and AI assistants are welcome.
+# ABR Pro Towing — all search engines and AI assistants are welcome.
 User-agent: *
 Allow: /
 

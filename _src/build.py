@@ -304,7 +304,7 @@ def posts_section():
     return f"""
 <section class="section soft" id="updates">
   <div class="wrap">
-    <div class="section-head center"><span class="kicker">Latest updates</span><h2>News from ABR Pro Towing & Recovery</h2></div>
+    <div class="section-head center"><span class="kicker">Latest updates</span><h2>News from ABR Pro Towing</h2></div>
     <div class="grid grid-3">{cards}</div>
   </div>
 </section>"""
@@ -475,7 +475,7 @@ def layout(path, title, desc, body, schema=None, noindex=False, active=None):
 <div class="topline"><div class="wrap"><span>Open 24/7 · Towing<span class="hide-s"> &amp; roadside help</span> in {CITY}</span><a class="hide-s" href="{TEL}">Call {PHONE}</a></div></div>
 <header class="site-header">
   <div class="wrap header-inner">
-    <a class="brand" href="/" aria-label="{e(NAME)} — home">{LOGO_SVG}<span>ABR <b>Pro Towing</b><small>&amp; Recovery</small></span></a>
+    <a class="brand" href="/" aria-label="{e(NAME)} — home">{LOGO_SVG}<span>ABR <b>Pro Towing</b></span></a>
     <nav class="nav" id="nav" aria-label="Main">{nav}</nav>
     <a class="btn btn-call header-call" href="{TEL}">{icon("phone")}<span class="num">{PHONE}</span><span class="sr-only">Call us</span></a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav" aria-label="Open menu">{icon("menu")}</button>
@@ -489,7 +489,7 @@ def layout(path, title, desc, body, schema=None, noindex=False, active=None):
   <div class="wrap">
     <div class="footer-grid">
       <div>
-        <a class="brand" href="/">{LOGO_SVG}<span>ABR <b>Pro Towing</b><small>&amp; Recovery</small></span></a>
+        <a class="brand" href="/">{LOGO_SVG}<span>ABR <b>Pro Towing</b></span></a>
         <p style="margin-top:1rem">24/7 towing and roadside assistance based in {CITY}, {S['region_full']}, serving surrounding GTA communities.</p>
         <a class="footer-phone" href="{TEL}">{PHONE}</a>
         <ul>
@@ -974,7 +974,7 @@ add("/about.html", "about.html", layout(
 
 # ---------- Contact
 trail = [("Home", "/"), ("Contact", "/contact.html")]
-contact_body = page_hero(trail, "Contact ABR Pro Towing & Recovery",
+contact_body = page_hero(trail, "Contact ABR Pro Towing",
                          f"Need a tow right now? Call — we answer 24/7. For quotes and planned transports, use the form.") + f"""
 <section class="section">
   <div class="wrap split">
@@ -1009,7 +1009,7 @@ ty_body = f"""
   <div class="btn-row" style="justify-content:center;margin-top:1.5rem">{call_btn("btn btn-call btn-lg")}<a class="btn btn-outline btn-lg" href="/">Back to home</a></div>
 </div></section>"""
 add("/thank-you.html", "thank-you.html", layout("/thank-you.html", f"Request received | {NAME}",
-    "Thanks for contacting ABR Pro Towing & Recovery.", ty_body, noindex=True), sitemap=False)
+    "Thanks for contacting ABR Pro Towing.", ty_body, noindex=True), sitemap=False)
 
 privacy_body = page_hero([("Home", "/"), ("Privacy", "/privacy.html")], "Privacy note", "How we handle the information you send us.", buttons=False) + f"""
 <section class="section"><div class="wrap narrow prose">
