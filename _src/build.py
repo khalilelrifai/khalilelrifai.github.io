@@ -10,6 +10,7 @@ import datetime
 import html
 import json
 import os
+import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 S = json.load(open(os.path.join(ROOT, "_src", "site.json"), encoding="utf-8"))
@@ -1047,7 +1048,274 @@ REDIRECTS = {"service.html": "/services/", "booking.html": "/contact.html", "tea
 
 
 # ------------------------------------------------------------------ write
+# Centralized GTA copy updates shared by all generated pages.
+GTA_COPY = dict([
+  [
+    "The price depends on the distance, your vehicle and the situation (for example a simple breakdown versus an accident or a car stuck in a ditch). Call or text us with your location and destination and we'll quote you",
+    "If you're looking for the cheapest towing option, compare the full quoted cost, distance, vehicle type and any extra charges. For affordable towing and transparent pricing, call or text ABR Pro Towing with your pickup and destination and we'll quote you"
+  ],
+  [
+    "ABR Pro Towing is a local Mississauga towing company. We tow cars, SUVs, minivans and light trucks in authorized locations in the city — and help with boosts, lockouts and flat tires — any time, day or night.",
+    "ABR Pro Towing serves Mississauga and the Greater Toronto Area. We tow cars, SUVs, minivans and light trucks in authorized locations and help with boosts, lockouts and flat tires, day or night."
+  ],
+  [
+    "Need a tow on a local street or in a parking lot near Square One? ABR Pro Towing sends a tow truck to you — day or night. One call gets you a clear price and an honest arrival time.",
+    "Looking for a tow truck near you in Mississauga or across the Greater Toronto Area (GTA)? ABR Pro Towing provides 24/7 emergency towing and roadside assistance in authorized locations. Call or text for an upfront quote and an estimated arrival time."
+  ],
+  [
+    "We're based in Mississauga, so we know the roads — Hurontario, Dundas, Eglinton and the busy plazas and condo garages around City Centre. Call to confirm access and availability.",
+    "We help drivers in Mississauga and across the GTA, from local streets and residential areas to accessible commercial properties and parking lots. Call to confirm access and availability."
+  ],
+  [
+    "24/7 towing &amp; roadside assistance in Mississauga, ON. Emergency towing, battery boosts, lockouts, flat tires, accident recovery &amp; vehicle transport. Call (647) 892-5167.",
+    "24/7 towing and roadside assistance in Mississauga and across the GTA. Emergency tow trucks, battery boosts, lockouts and upfront quotes. Call (647) 892-5167."
+  ],
+  [
+    "24/7 towing & roadside assistance in Mississauga, ON. Emergency towing, battery boosts, lockouts, flat tires, accident recovery & vehicle transport. Call (647) 892-5167.",
+    "24/7 towing and roadside assistance in Mississauga and across the GTA. Emergency tow trucks, battery boosts, lockouts and upfront quotes. Call (647) 892-5167."
+  ],
+  [
+    "Local 24/7 tow truck in Mississauga, ON. Local towing, boosts, lockouts and accident recovery. Port Credit to Malton. Call (647) 892-5167.",
+    "24/7 local tow truck in Mississauga and across the GTA. Towing, boosts, lockouts and accident recovery. Port Credit to Malton. Call (647) 892-5167."
+  ],
+  [
+    "ABR Pro Towing provides 24/7 towing and roadside assistance in Mississauga, Brampton, Oakville, Etobicoke, Milton, Toronto.",
+    "ABR Pro Towing provides 24/7 towing and roadside assistance in Mississauga and across the GTA, including Brampton, Oakville, Etobicoke, Milton and Toronto."
+  ],
+  [
+    "We're based in Mississauga and cover Mississauga neighbourhoods plus Brampton, Oakville, Etobicoke, Milton and Toronto.",
+    "We serve Mississauga and across the GTA, including Brampton, Oakville, Etobicoke, Milton and Toronto. Call to confirm availability for your location."
+  ],
+  [
+    "We travel into Toronto for tows to and from Mississauga, dealer transfers and planned vehicle transport.",
+    "We serve authorized locations in Toronto for local towing, roadside help and planned vehicle transport, subject to availability."
+  ],
+  [
+    "24/7 towing and roadside assistance based in Mississauga, Ontario, serving surrounding GTA communities.",
+    "24/7 towing and roadside assistance serving Mississauga and across the Greater Toronto Area (GTA), Ontario."
+  ],
+  [
+    "ABR Pro Towing is a 24/7 towing and roadside assistance company based in Mississauga, Ontario, Canada.",
+    "ABR Pro Towing is a 24/7 towing and roadside assistance company serving Mississauga and across the Greater Toronto Area (GTA), Ontario, Canada."
+  ],
+  [
+    "Based in Mississauga, we tow and help drivers across Peel, Halton and the west GTA — 24/7.",
+    "We provide towing and roadside assistance across the Greater Toronto Area (GTA), including Mississauga, Peel, Halton, Toronto, York and Durham. Call with your location to confirm dispatch availability in authorized areas."
+  ],
+  [
+    "ABR Pro Towing is a towing and roadside assistance company based in Mississauga, Ontario.",
+    "ABR Pro Towing provides towing and roadside assistance in Mississauga and across the Greater Toronto Area (GTA), Ontario."
+  ],
+  [
+    "Mississauga and nearby communities including Brampton, Oakville, Etobicoke and more.",
+    "Mississauga and the GTA, including Brampton, Oakville, Etobicoke and beyond, subject to availability."
+  ],
+  [
+    "Based in <a href=\"/towing-mississauga.html\">Mississauga</a>, also covering:",
+    "Serving <a href=\"/towing-mississauga.html\">Mississauga</a> and across the GTA, including:"
+  ],
+  [
+    "Service area: Mississauga, Brampton, Oakville, Etobicoke, Milton, Toronto.",
+    "Service coverage: Mississauga and the GTA, including Brampton, Oakville, Etobicoke, Milton, Toronto, with York and Durham availability confirmed by phone. For affordable towing or a tow truck near you, call for a full upfront quote."
+  ],
+  [
+    "\"areaServed\": [\n    {\n     \"@type\": \"City\",\n     \"name\": \"Mississauga, ON\"",
+    "\"areaServed\": [\n    {\n     \"@type\": \"Place\",\n     \"name\": \"Greater Toronto Area, Ontario, Canada\"\n    },\n    {\n     \"@type\": \"City\",\n     \"name\": \"Mississauga, ON\""
+  ],
+  [
+    "Roadside Assistance Mississauga: Boost &amp; Lockout | ABR Pro Towing",
+    "Roadside Assistance Mississauga &amp; GTA | ABR Pro Towing"
+  ],
+  [
+    "Roadside Assistance Mississauga: Boost & Lockout | ABR Pro Towing",
+    "Roadside Assistance Mississauga & GTA | ABR Pro Towing"
+  ],
+  [
+    "Real reviews from drivers we've helped in Mississauga and nearby,",
+    "Read reviews from drivers in Mississauga and across the GTA,"
+  ],
+  [
+    "We live and work in Mississauga and the surrounding communities.",
+    "We serve drivers in Mississauga and across the GTA, subject to location and dispatch availability."
+  ],
+  [
+    "Service Areas: Mississauga, Brampton, Oakville | ABR Pro Towing",
+    "Towing Service Areas: Mississauga & Greater Toronto Area | ABR Pro Towing"
+  ],
+  [
+    "24/7 towing and roadside assistance company in Mississauga, ON.",
+    "24/7 towing and roadside assistance company serving Mississauga and the GTA, Ontario."
+  ],
+  [
+    "<strong>Based in</strong>Mississauga, ON — mobile service area",
+    "<strong>Service coverage</strong>Mississauga &amp; GTA — mobile service area"
+  ],
+  [
+    "24/7 Towing &amp; Roadside Assistance in <em>Mississauga</em>",
+    "24/7 Towing &amp; Roadside Assistance in <em>Mississauga &amp; the GTA</em>"
+  ],
+  [
+    "Towing Mississauga 24/7 | Tow Truck Near You | ABR Pro Towing",
+    "Tow Truck Near You in Mississauga | GTA Towing 24/7 | ABR Pro Towing"
+  ],
+  [
+    "24/7 towing and roadside assistance in Mississauga, Ontario:",
+    "24/7 towing and roadside assistance in Mississauga and across the Greater Toronto Area (GTA), Ontario:"
+  ],
+  [
+    "Accident Towing &amp; Recovery Mississauga | ABR Pro Towing",
+    "Accident Towing Mississauga &amp; GTA | ABR Pro Towing"
+  ],
+  [
+    "A local Mississauga towing and roadside assistance company,",
+    "A towing and roadside assistance company serving Mississauga and the GTA,"
+  ],
+  [
+    "24/7 Towing Mississauga | ABR Pro Towing | (647) 892-5167",
+    "24/7 Towing Mississauga & GTA | ABR Pro Towing"
+  ],
+  [
+    "Car Transport &amp; Long-Distance Towing | ABR Pro Towing",
+    "GTA Car Transport &amp; Long-Distance Towing | ABR Pro Towing"
+  ],
+  [
+    "within authorized areas in Mississauga and nearby cities.",
+    "within authorized areas in Mississauga and across the GTA."
+  ],
+  [
+    "Contact Us | 24/7 Tow Truck Mississauga | (647) 892-5167",
+    "Contact | 24/7 Tow Truck Mississauga & GTA | ABR Pro Towing"
+  ],
+  [
+    "Accident Towing & Recovery Mississauga | ABR Pro Towing",
+    "Accident Towing Mississauga & GTA | ABR Pro Towing"
+  ],
+  [
+    "About ABR Pro Towing | Local Mississauga Towing Company",
+    "About ABR Pro Towing | Mississauga & GTA Towing"
+  ],
+  [
+    "Car Transport & Long-Distance Towing | ABR Pro Towing",
+    "GTA Car Transport & Long-Distance Towing | ABR Pro Towing"
+  ],
+  [
+    "24/7 Emergency Towing Mississauga | ABR Pro Towing",
+    "24/7 Emergency Towing Mississauga & GTA | ABR Pro Towing"
+  ],
+  [
+    "How fast can a tow truck get to me in Mississauga?",
+    "How can I get a tow truck near me in Mississauga or the GTA?"
+  ],
+  [
+    "Open 24/7 across Mississauga and nearby cities.",
+    "Open 24/7 in Mississauga and across the GTA."
+  ],
+  [
+    "Emergency tow truck in Mississauga, open 24/7.",
+    "Emergency tow truck in Mississauga and across the GTA, open 24/7."
+  ],
+  [
+    "Accident Towing &amp; Recovery in Mississauga",
+    "Accident Towing &amp; Recovery in Mississauga and the GTA"
+  ],
+  [
+    "Towing &amp; Roadside Services in Mississauga",
+    "Towing &amp; Roadside Services in Mississauga and the GTA"
+  ],
+  [
+    "Reviews | ABR Pro Towing — Mississauga Towing",
+    "Reviews | ABR Pro Towing — Mississauga & GTA"
+  ],
+  [
+    "Towing Services Mississauga | ABR Pro Towing",
+    "Towing Services Mississauga & GTA | ABR Pro Towing"
+  ],
+  [
+    "Need a tow right now? Call — we answer 24/7.",
+    "Need a tow in Mississauga or the GTA? Call — we answer 24/7."
+  ],
+  [
+    "Towing in Mississauga, ON — 24 Hours a Day",
+    "Mississauga Towing & GTA Roadside Help — 24/7"
+  ],
+  [
+    "Accident Towing & Recovery in Mississauga",
+    "Accident Towing & Recovery in Mississauga and the GTA"
+  ],
+  [
+    "Towing & Roadside Services in Mississauga",
+    "Towing & Roadside Services in Mississauga and the GTA"
+  ],
+  [
+    "24/7 roadside assistance in Mississauga:",
+    "24/7 roadside assistance in Mississauga and the GTA:"
+  ],
+  [
+    "for 24/7 towing in Mississauga, or email",
+    "for 24/7 towing in Mississauga and the GTA, or email"
+  ],
+  [
+    "How much does a tow cost in Mississauga?",
+    "How can I compare cheap towing quotes in Mississauga and the GTA?"
+  ],
+  [
+    "Local Mississauga towing company</li>",
+    "Serving Mississauga and the GTA</li>"
+  ],
+  [
+    "Accident towing in Mississauga, 24/7.",
+    "Accident towing in Mississauga and the GTA, 24/7."
+  ],
+  [
+    "in Mississauga and nearby. Open 24/7.",
+    "in Mississauga and across the GTA. Open 24/7."
+  ],
+  [
+    "<span class=\"kicker\">Home base</span>",
+    "<span class=\"kicker\">Mississauga &amp; GTA</span>"
+  ],
+  [
+    "24/7 Emergency Towing in Mississauga",
+    "24/7 Emergency Towing in Mississauga and the GTA"
+  ],
+  [
+    "Not sure if we cover your location?",
+    "For York Region, Durham Region and other GTA communities, call to confirm availability for your specific pickup location. Not sure if we cover your location?"
+  ],
+  [
+    "Roadside Assistance in Mississauga",
+    "Roadside Assistance in Mississauga and the GTA"
+  ],
+  [
+    "Read what Mississauga drivers say",
+    "Read what Mississauga and GTA drivers say"
+  ],
+  [
+    "Why Mississauga drivers call us",
+    "Why Mississauga and GTA drivers call us"
+  ],
+  [
+    "</span> in Mississauga</span>",
+    "</span> in Mississauga &amp; GTA</span>"
+  ],
+  [
+    "What Mississauga drivers say",
+    "What Mississauga and GTA drivers say"
+  ],
+  [
+    "<h1>Service Areas</h1>",
+    "<h1>Service Areas: Mississauga &amp; Greater Toronto Area</h1>"
+  ],
+  [
+    "And nearby cities:",
+    "Selected GTA communities:"
+  ]
+])
+GTA_COPY_PATTERN = re.compile("|".join(re.escape(key) for key in GTA_COPY))
+
 def write(rel, content):
+    if rel.endswith(".html") or rel == "llms.txt":
+        content = GTA_COPY_PATTERN.sub(lambda match: GTA_COPY[match.group(0)], content)
     p = os.path.join(ROOT, rel)
     os.makedirs(os.path.dirname(p), exist_ok=True)
     with open(p, "w", encoding="utf-8") as f:
