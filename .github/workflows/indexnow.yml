@@ -1,0 +1,28 @@
+name: Notify IndexNow
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: indexnow-main
+  cancel-in-progress: false
+jobs:
+  notify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate URL selection
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: python3 _src/indexnow.py --dry-run --before "$BEFORE"
+      - name: Notify after the new pages are live
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: python3 _src/indexnow.py --before "$BEFORE"
