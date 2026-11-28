@@ -9,6 +9,12 @@ const base = "http://127.0.0.1:8000";
   const errors=[];
   page.on("pageerror", e=>errors.push(e.message));
   await page.route("https://maps.google.com/**",r=>r.abort());
+  // Mock API response; deliberately include HTML-looking review text to exercise safe rendering.
+  await page.route("https://maps.googleapis.com/maps/api/js?*",r=>r.fulfill({contentType:"application/javascript",body:`
+   window.google={maps:{importLibrary:async()=>({Place:class{
+   async fetchFields(){this.rating=4.7;this.userRatingCount=23;this.googleMapsURI="https://www.google.com/maps";
+   this.attributions=[];this.reviews=[{rating:5,text:"<img src=x onerror=alert(1)> "+ "A useful test review. ".repeat(20),publishTime:new Date("2026-11-01"),authorAttribution:{displayName:"Test Reviewer",uri:"https://www.google.com/maps"}}];}
+   }})}};window.abrGoogleReady();`}));
   const urls = fs.readFileSync("sitemap.xml","utf8").match(/<loc>[^<]+<\/loc>/g).map(s=>s.slice(5,-6).replace("https://abrprotowing.com",base));
   for (const width of [320,375,768,1280]) {
    await page.setViewportSize({width,height:900});
@@ -36,17 +42,23 @@ const base = "http://127.0.0.1:8000";
   assert.equal(await page.locator(".live-reviews").count(),1,"Live reviews must be configured");
   assert.equal(await page.locator(".live-reviews").getAttribute("data-place"),"ChIJgyIjHDrhvq4R4Gz5Axv73Us");
   assert.ok(await page.locator('a[href="https://g.page/r/CeBs-QMb-91LEAE/review"]').count());
-  // Mock API response; deliberately include HTML-looking review text to exercise safe rendering.
-  await page.route("https://maps.googleapis.com/maps/api/js?*",r=>r.fulfill({contentType:"application/javascript",body:`
-   window.google={maps:{importLibrary:async()=>({Place:class{
-   async fetchFields(){this.rating=4.7;this.userRatingCount=23;this.googleMapsURI="https://www.google.com/maps";
-   this.attributions=[];this.reviews=[{rating:5,text:"<img src=x onerror=alert(1)>",publishTime:new Date("2026-11-01"),authorAttribution:{displayName:"Test Reviewer",uri:"https://www.google.com/maps"}}];}
-   }})}};window.abrGoogleReady();`}));
-  await page.locator(".live-reviews button").click();
-  await page.locator(".google-results .review").waitFor();
-  assert.match(await page.locator(".google-results").innerText(),/4\.7 \/ 5 · 23 ratings/);
+  await page.locator(".live-reviews").scrollIntoViewIfNeeded();
+  await page.locator(".google-results .gr-card").waitFor();
+  assert.ok(await page.locator(".live-reviews > button").isHidden());
+  assert.equal(await page.locator(".gr-number").innerText(),"4.7");
+  assert.match(await page.locator(".gr-count").innerText(),/23 Google ratings/);
+  assert.equal(await page.locator(".gr-expand").getAttribute("aria-expanded"),"false");
+  await page.locator(".gr-expand").click();
+  assert.equal(await page.locator(".gr-expand").getAttribute("aria-expanded"),"true");
+  assert.equal(await page.locator(".gr-clamped").count(),0);
+  await page.locator(".gr-expand").click();
+  assert.equal(await page.locator(".gr-clamped").count(),1);
   assert.ok((await page.locator(".google-results").innerText()).includes("<img src=x onerror=alert(1)>"));
   assert.equal(await page.locator(".google-results img").count(),0);
+  for(const width of [320,375,768,1280]){
+    await page.setViewportSize({width,height:900});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2),false);
+  }
   await page.screenshot({path:"browser-evidence/reviews-mocked.png",fullPage:true});
   // Form contract only: intercept the outbound request, never send a real message.
   await page.route("https://formsubmit.co/**",async r=>{
