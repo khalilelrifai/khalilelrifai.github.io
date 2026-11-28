@@ -1328,8 +1328,8 @@ for f, t in REDIRECTS.items():
     write(f, redirect_stub(t))
 
 urls = "".join(
-    f"  <url><loc>{DOMAIN}{path}</loc><lastmod>{TODAY}</lastmod></url>\n"
-    for path, _, _, inc, prio in PAGES if inc
+    f"  <url><loc>{DOMAIN}{path}</loc><lastmod>{S.get('reviews_updated', TODAY) if 'live-reviews' in out else TODAY}</lastmod></url>\n"
+    for path, _, out, inc, prio in PAGES if inc
 )
 write("sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}</urlset>\n')
 

@@ -1,7 +1,7 @@
 name: Build and validate site
 on:
   push:
-    branches: [feat/local-seo-gbp-ai-search-optimization]
+    branches: [main, feat/local-seo-gbp-ai-search-optimization]
   pull_request:
     branches: [main]
 permissions:

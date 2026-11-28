@@ -79,4 +79,10 @@ assert (ROOT/"img/abr-pro-logo.webp").read_bytes()[:4]==b"RIFF"
 for p in [ROOT/"index.html",ROOT/"reviews.html"]:
     assert S["gbp_owner_share_url"] in p.read_text(),p
 assert not S.get("google_reviews",{}).get("enabled") or all(S["google_reviews"].get(k) for k in ["place_id","browser_key"])
+if S.get("google_reviews",{}).get("enabled"):
+    for p in [ROOT/"index.html", ROOT/"reviews.html"]:
+        content = p.read_text()
+        assert 'class="live-reviews"' in content, p
+        assert S["google_reviews"]["place_id"] in content, p
+        assert S["gbp_review_url"] in content, p
 print(f"PASS: {len(pages)} HTML pages; {len(urls)} sitemap URLs; schema, local links, identity, crawler access, review fallback and restricted-zone regression checks")

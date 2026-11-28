@@ -33,21 +33,15 @@ const base = "http://127.0.0.1:8000";
   }
   await page.goto(base+"/reviews.html");
   assert.ok(await page.locator('a[href="https://share.google/GNsj14FYJZ46z7Qpz"]').count());
-  assert.equal(await page.locator(".live-reviews").count(),0,"API must remain disabled without credentials");
+  assert.equal(await page.locator(".live-reviews").count(),1,"Live reviews must be configured");
+  assert.equal(await page.locator(".live-reviews").getAttribute("data-place"),"ChIJgyIjHDrhvq4R4Gz5Axv73Us");
+  assert.ok(await page.locator('a[href="https://g.page/r/CeBs-QMb-91LEAE/review"]').count());
   // Mock API response; deliberately include HTML-looking review text to exercise safe rendering.
   await page.route("https://maps.googleapis.com/maps/api/js?*",r=>r.fulfill({contentType:"application/javascript",body:`
    window.google={maps:{importLibrary:async()=>({Place:class{
    async fetchFields(){this.rating=4.7;this.userRatingCount=23;this.googleMapsURI="https://www.google.com/maps";
    this.attributions=[];this.reviews=[{rating:5,text:"<img src=x onerror=alert(1)>",publishTime:new Date("2026-11-01"),authorAttribution:{displayName:"Test Reviewer",uri:"https://www.google.com/maps"}}];}
    }})}};window.abrGoogleReady();`}));
-  await page.evaluate(()=>{
-   const panel=document.createElement("div");
-   panel.className="live-reviews";
-   panel.dataset.key="MOCK_ONLY";panel.dataset.place="MOCK_ONLY";
-   panel.innerHTML='<button type="button">Load Google reviews</button><p role="status"></p><div class="google-results"></div>';
-   document.body.append(panel);
-  });
-  await page.addScriptTag({url:base+"/js/google-reviews.js"});
   await page.locator(".live-reviews button").click();
   await page.locator(".google-results .review").waitFor();
   assert.match(await page.locator(".google-results").innerText(),/4\.7 \/ 5 · 23 ratings/);

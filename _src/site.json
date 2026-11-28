@@ -21,7 +21,7 @@
   ],
   "_gbp_TODO": "Confirm official GBP URL, review link, exact public name, hours and service areas. Owner-provided share link is a fallback, not verified schema identity.",
   "gbp_url": "",
-  "gbp_review_url": "",
+  "gbp_review_url": "https://g.page/r/CeBs-QMb-91LEAE/review",
   "social": {
     "facebook": "",
     "instagram": "",
@@ -36,9 +36,10 @@
   "gallery": [],
   "gbp_owner_share_url": "https://share.google/GNsj14FYJZ46z7Qpz",
   "google_reviews": {
-    "enabled": false,
-    "place_id": "",
-    "browser_key": ""
+    "enabled": true,
+    "place_id": "ChIJgyIjHDrhvq4R4Gz5Axv73Us",
+    "browser_key": "AIzaSyD_9HrZDRl96LKbh6r7wqcXoHxoYvgD52I"
   },
-  "content_updated": "2026-11-26"
+  "content_updated": "2026-11-26",
+  "reviews_updated": "2026-11-28"
 }
