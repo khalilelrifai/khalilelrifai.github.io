@@ -34,5 +34,7 @@ jobs:
             css/
             js/
             img/
+      - name: Validate Cloudflare output and Worker
+        run: python3 _src/cloudflare_build.py && node _src/cloudflare-test.mjs
       - name: Require generated files to match source
         run: git diff --exit-code -- '*.html' sitemap.xml robots.txt llms.txt
