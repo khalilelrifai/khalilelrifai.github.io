@@ -53,7 +53,7 @@ async function reviews(request,env,url) {
     if(!await reserve(env)) return error(429);
     const response=await fetch("https://places.googleapis.com/v1/places/"+PLACE+"?languageCode=en",{
       headers:{"X-Goog-Api-Key":env.GOOGLE_PLACES_API_KEY,"X-Goog-FieldMask":FIELDS},
-      redirect:"error",signal:AbortSignal.timeout(10000)
+      redirect:"manual",signal:AbortSignal.timeout(10000)
     });
     if(!response.ok) return error(502);
     return json(normalize(await response.json()));
